@@ -16,16 +16,22 @@ type service struct {
 }
 
 var dbProduct models.Product
-resutl := models.Product{}
+
+func New(db *gorm.DB, pg *paginate.Pagination) *service {
+	return &service{
+		db: db,
+		pg: pg,
+	}
+}
 
 func (s *service) New(product *models.Product, newProduct models.Product) (*models.Product, error) {
 	if product != nil {
 
-		err1 := fmt.Errorf("No error ocured")
+		err1 := fmt.Errorf("no error ocured")
 		return nil, err1
 	}
 
-	if result != "" {
+	if product.Name != "" {
 
 		return c.Status(fiber.StatusConflict).JSON(fiber.Map{
 			"error": "Product already exists",
@@ -43,6 +49,8 @@ func (s *service) Get(product *models.Product, id uint) (*models.Product, error)
 	if product == nil {
 		return nil, errors.New("Product not found")
 	}
+
+	return nil, nil
 }
 
 func (s *service) Query(product *models.Product, ctx *fiber.Ctx) (paginate.Page, error) {
@@ -53,35 +61,21 @@ func (s *service) Query(product *models.Product, ctx *fiber.Ctx) (paginate.Page,
 	return page, nil
 }
 
-func (s *service) Update(user *model.User, updatedUser *model.User) (*model.User, error) {
-	// Guests not allowed
-	if user == nil {
-		return nil, errors.New(services.ErrNotAllowed)
+func (s *service) Update(product *models.Product, updatedProduct *models.Product) (*models.Product, error) {
+	if product == nil {
+		return nil, errors.New("Product not found")
 	}
 
-	// Basic users should only be able to update themselves
-	if user.IsBasic() && user.ID != updatedUser.ID {
-		return nil, errors.New(services.ErrNotAllowed)
-	}
-
-	if errs := services.ValidateStruct(*updatedUser); errs != nil {
-		// todo: return all errors
-		return nil, errs[0]
-	}
-
-	var dbUser model.User
+	var dbProduct models.Product
 	var res *gorm.DB
 
-	if res = s.db.First(&dbUser, updatedUser.ID); res.Error != nil {
+	if res = s.db.First(&dbProduct, updatedProduct.ID); res.Error != nil {
 		return nil, res.Error
 	}
 
-	if res = s.db.Model(&dbUser).Updates(updatedUser); res.Error != nil {
+	if res = s.db.Model(&dbProduct).Updates(updatedProduct); res.Error != nil {
 		return nil, res.Error
 	}
 
-	// todo: send notification
-	dbUser.Password = ""
-
-	return &dbUser, nil
+	return &dbProduct, nil
 }

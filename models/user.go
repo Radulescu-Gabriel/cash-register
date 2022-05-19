@@ -1,6 +1,13 @@
 package models
 
-import "time"
+import (
+	"strings"
+	"time"
+)
+
+const (
+	RoleAdmin = "admin"
+)
 
 type UserDTO struct {
 	ID           uint      `json:"id"`
@@ -10,6 +17,7 @@ type UserDTO struct {
 	Email        string    `json:"email,omitempty"`
 	FirstName    string    `json:"firstName"`
 	LastName     string    `json:"lastName"`
+	Scopes       string    `json:"scopes"`
 }
 
 type User struct {
@@ -21,4 +29,13 @@ type User struct {
 	Email        string  `json:"email,omitempty" gorm:"uniqueIndex,size:255" validate:"email,max=64"` // todo: required if no mobile
 	History      []Login `json:"history,omitempty" gorm:"foreignKey:CreatedByID"`
 	Password     string  `json:"password,omitempty"`
+	Scopes       string  `json:"scopes"`
+}
+
+func (u *User) Is(role string) bool {
+	return strings.Contains(u.Scopes, role)
+}
+
+func (u *User) IsBasic() bool {
+	return !strings.Contains(u.Scopes, RoleAdmin)
 }
